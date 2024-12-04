@@ -1,2 +1,12 @@
 ultralytics
 pre-commit
+numpy==1.26.4
+Pillow
+black
+pyright
+pandas
+scikit-learn
+seaborn
+matplotlib
+picsellia
+python-dotenv
