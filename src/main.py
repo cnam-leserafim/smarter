@@ -1,5 +1,6 @@
 import os
 import json
+import zipfile
 from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
@@ -52,6 +53,28 @@ def export_annotations(dataset):
     dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
     print(f"Annotations exportées dans : {ANNOTATIONS_DIR}")
 
+def extract_annotations():
+    # Trouver la première archive ZIP dans le dossier ou sous-dossier
+    zip_file = next(
+        (os.path.join(root, file) for root, _, files in os.walk(ANNOTATIONS_DIR)
+         for file in files if file.endswith(".zip")),
+        None,
+    )
+    if zip_file:
+        # Créer le dossier "annotations" s'il n'existe pas
+        os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
+
+        # Décompresser l'archive ZIP
+        with zipfile.ZipFile(zip_file, "r") as zip_ref:
+            zip_ref.extractall(ANNOTATIONS_DIR)
+        print(f"Archive décompressée dans : {ANNOTATIONS_DIR}")
+
+        # Supprimer l'archive ZIP
+        os.remove(zip_file)
+        print(f"Archive {zip_file} supprimée.")
+    else:
+        print("Aucune archive ZIP trouvée dans le dossier 'datasets' ou ses sous-dossiers.")
+
 
 def main():
     # --- PARTIE 1 : Importer les images et les annotations ---
@@ -59,6 +82,8 @@ def main():
     dataset = import_datasets(client)
     get_experiment(client)
     export_annotations(dataset)
+    extract_annotations()
+
 
 if __name__ == "__main__":
     main()
