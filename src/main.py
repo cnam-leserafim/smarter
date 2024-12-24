@@ -19,7 +19,6 @@ os.makedirs(output_dir_dataset, exist_ok=True)
 dataset.list_assets().download(output_dir_dataset)
 
 project = client.get_project(project_name="Groupe_1")
-
 experiment = project.create_experiment(
     name="experiment-0",
     description="base experiment",
