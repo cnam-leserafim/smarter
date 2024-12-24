@@ -1,15 +1,16 @@
 import os
-import json
-import zipfile
 import random
 import shutil
-import yaml
+import zipfile
 from glob import glob
+
+import yaml
 from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
 
 load_dotenv()
+
 
 WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
@@ -21,12 +22,14 @@ LABELS_DIR = f"{OUTPUT_DIR}/labels"
 SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 random.seed(42)
 
+
 # Connect to the Picsellia client
 def connect_to_client():
     return Client(
         api_token=os.getenv("PICSELLIA_API_TOKEN"),
-        organization_name=WORKSPACE_NAME
+        organization_name=WORKSPACE_NAME,
     )
+
 
 # Downloading the dataset from Picsellia
 def import_datasets(client):
@@ -44,7 +47,7 @@ def get_experiment(client):
     print(f"Existing experimentation recovered : {experiment.name}")
     datasets = experiment.list_attached_dataset_versions()
     print(f"Datasets attached to the experience : {datasets}")
-    '''
+    """
         experiment = project.create_experiment(
             name="experiment-1",
             description="base experiment",
@@ -55,7 +58,8 @@ def get_experiment(client):
             dataset_version=dataset,
         )
         print(f"Creation of new experiment : {experiment.name}")
-        '''
+        """
+
 
 # Export of annotations in YOLO format
 def export_annotations(dataset):
@@ -64,11 +68,16 @@ def export_annotations(dataset):
     dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
     print(f"Annotations exported to : {ANNOTATIONS_DIR}")
 
+
 def extract_annotations():
     # Find the first ZIP archive in the folder or subfolder
     zip_file = next(
-        (os.path.join(root, file) for root, _, files in os.walk(ANNOTATIONS_DIR)
-         for file in files if file.endswith(".zip")),
+        (
+            os.path.join(root, file)
+            for root, _, files in os.walk(ANNOTATIONS_DIR)
+            for file in files
+            if file.endswith(".zip")
+        ),
         None,
     )
     if zip_file:
@@ -88,6 +97,7 @@ def extract_annotations():
 
     # Check extracted files
     extracted_files = os.listdir(ANNOTATIONS_DIR)
+    print(f"Extracted files: {extracted_files}")
     print(f"Extracted files: {extracted_files}")
     file_count = len(extracted_files)
     print(f"Total number of extracted files : {file_count}")
@@ -110,8 +120,9 @@ def split_data():
     return {
         "train": data_pairs[:train_idx],
         "val": data_pairs[train_idx:val_idx],
-        "test": data_pairs[val_idx:]
+        "test": data_pairs[val_idx:],
     }
+
 
 # Copying files to respective directories
 def copy_files(pairs, dest_image_dir, dest_label_dir):
@@ -121,6 +132,7 @@ def copy_files(pairs, dest_image_dir, dest_label_dir):
         shutil.copy(image, dest_image_dir)
         shutil.copy(label, dest_label_dir)
 
+
 # Generating the YAML file
 def generate_yaml_file():
     config = {
@@ -129,8 +141,16 @@ def generate_yaml_file():
         "test": f"{IMAGES_DIR}/test",
         "nc": 10,
         "names": [
-            "Canettes", "Bouteilles en plastique", "Pepito", "Kinder Country",
-            "Kinder Tronky", "Kinder Pinguy", "Tic-Tac", "Sucette", "Capsule", "Mikado"
+            "Canettes",
+            "Bouteilles en plastique",
+            "Pepito",
+            "Kinder Country",
+            "Kinder Tronky",
+            "Kinder Pinguy",
+            "Tic-Tac",
+            "Sucette",
+            "Capsule",
+            "Mikado",
         ],
     }
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -152,11 +172,7 @@ def main():
     split_data_dict = split_data()
     # Copying files to corresponding directories
     for split, pairs in split_data_dict.items():
-        copy_files(
-            pairs,
-            f"{IMAGES_DIR}/{split}",
-            f"{LABELS_DIR}/{split}"
-        )
+        copy_files(pairs, f"{IMAGES_DIR}/{split}", f"{LABELS_DIR}/{split}")
     generate_yaml_file()
 
 
