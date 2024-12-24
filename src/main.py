@@ -75,6 +75,11 @@ def extract_annotations():
     else:
         print("Aucune archive ZIP trouvée dans le dossier 'datasets' ou ses sous-dossiers.")
 
+    # Vérifier les fichiers extraits
+    extracted_files = os.listdir(ANNOTATIONS_DIR)
+    print(f"Fichiers extraits : {extracted_files}")
+    file_count = len(extracted_files)
+    print(f"Nombre total de fichiers extraits : {file_count}")
 
 def main():
     # --- PARTIE 1 : Importer les images et les annotations ---
