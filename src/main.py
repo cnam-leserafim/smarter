@@ -2,11 +2,14 @@ import os
 import json
 from dotenv import load_dotenv
 from picsellia import Client
+from picsellia.types.enums import AnnotationFileType
 
 load_dotenv()
 WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
 OUTPUT_DIR_DATASET = "./datasets"
+ANNOTATIONS_DIR = f"{OUTPUT_DIR_DATASET}/annotations"
+
 
 # Connexion au client Picsellia
 def connect_to_client():
@@ -42,6 +45,12 @@ def get_experiment(client):
         )
         print(f"Création nouvelle expérimentation : {experiment.name}")
         '''
+# Export des annotations au format YOLO
+def export_annotations(dataset):
+    os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
+    zip_path = os.path.join(ANNOTATIONS_DIR, "annotations.zip")
+    dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
+    print(f"Annotations exportées dans : {ANNOTATIONS_DIR}")
 
 def main():
     # --- PARTIE 1 : Importer les images et les annotations ---
