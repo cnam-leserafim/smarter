@@ -52,12 +52,13 @@ def export_annotations(dataset):
     dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
     print(f"Annotations exportées dans : {ANNOTATIONS_DIR}")
 
+
 def main():
     # --- PARTIE 1 : Importer les images et les annotations ---
     client = connect_to_client()
     dataset = import_datasets(client)
     get_experiment(client)
-
+    export_annotations(dataset)
 
 if __name__ == "__main__":
     main()
