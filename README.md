@@ -24,7 +24,6 @@ Computer Vision to automatically recognize a defined set of products.
 ## 🚀 Prerequisites
 - Download PyCharm
 - Install Python 3.11
-- Add images to the folder input_images/
 
 ## 🏃🏼 Running the project
 - Use the button directly in PyCharm to launch the main file
