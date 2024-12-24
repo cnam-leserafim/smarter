@@ -2,6 +2,7 @@ import os
 import json
 import zipfile
 import random
+import shutil
 import yaml
 from glob import glob
 from dotenv import load_dotenv
@@ -13,8 +14,11 @@ WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
 OUTPUT_DIR_DATASET = "./datasets"
 ANNOTATIONS_DIR = f"{OUTPUT_DIR_DATASET}/annotations"
+OUTPUT_DIR = "./datasets/structured"
+IMAGES_DIR = f"{OUTPUT_DIR}/images"
+LABELS_DIR = f"{OUTPUT_DIR}/labels"
 SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
-
+random.seed(42)
 
 # Connect to the Picsellia client
 def connect_to_client():
@@ -108,6 +112,14 @@ def split_data():
         "test": data_pairs[val_idx:]
     }
 
+# Copying files to respective directories
+def copy_files(pairs, dest_image_dir, dest_label_dir):
+    os.makedirs(dest_image_dir, exist_ok=True)
+    os.makedirs(dest_label_dir, exist_ok=True)
+    for image, label in pairs:
+        shutil.copy(image, dest_image_dir)
+        shutil.copy(label, dest_label_dir)
+
 
 def main():
     # --- PART 1: Import images and annotations ---
@@ -119,6 +131,15 @@ def main():
 
     # --- PART 2: Split data for Ultralytics YOLO ---
     split_data_dict = split_data()
+    # Copying files to corresponding directories
+    for split, pairs in split_data_dict.items():
+        copy_files(
+            pairs,
+            f"{IMAGES_DIR}/{split}",
+            f"{LABELS_DIR}/{split}"
+        )
+
+
 
 if __name__ == "__main__":
     main()
