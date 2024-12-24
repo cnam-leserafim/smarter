@@ -10,6 +10,7 @@ from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
 
 load_dotenv()
+
 WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
 OUTPUT_DIR_DATASET = "./datasets"
@@ -120,6 +121,24 @@ def copy_files(pairs, dest_image_dir, dest_label_dir):
         shutil.copy(image, dest_image_dir)
         shutil.copy(label, dest_label_dir)
 
+# Generating the YAML file
+def generate_yaml_file():
+    config = {
+        "train": f"{IMAGES_DIR}/train",
+        "val": f"{IMAGES_DIR}/val",
+        "test": f"{IMAGES_DIR}/test",
+        "nc": 10,
+        "names": [
+            "Canettes", "Bouteilles en plastique", "Pepito", "Kinder Country",
+            "Kinder Tronky", "Kinder Pinguy", "Tic-Tac", "Sucette", "Capsule", "Mikado"
+        ],
+    }
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    yaml_path = os.path.join(OUTPUT_DIR, "config.yaml")
+    with open(yaml_path, "w") as yaml_file:
+        yaml.dump(config, yaml_file)
+    print(f"Generated config.yaml file : {yaml_path}")
+
 
 def main():
     # --- PART 1: Import images and annotations ---
@@ -138,7 +157,7 @@ def main():
             f"{IMAGES_DIR}/{split}",
             f"{LABELS_DIR}/{split}"
         )
-
+    generate_yaml_file()
 
 
 if __name__ == "__main__":
