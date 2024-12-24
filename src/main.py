@@ -12,28 +12,29 @@ OUTPUT_DIR_DATASET = "./datasets"
 ANNOTATIONS_DIR = f"{OUTPUT_DIR_DATASET}/annotations"
 
 
-# Connexion au client Picsellia
+# Connect to the Picsellia client
 def connect_to_client():
     return Client(
         api_token=os.getenv("PICSELLIA_API_TOKEN"),
         organization_name=WORKSPACE_NAME
     )
-# Téléchargement du dataset depuis Picsellia
+
+# Downloading the dataset from Picsellia
 def import_datasets(client):
     dataset = client.get_dataset_version_by_id(DATASET_ID)
     os.makedirs(OUTPUT_DIR_DATASET, exist_ok=True)
     dataset.list_assets().download(OUTPUT_DIR_DATASET)
-    print("Datasets importés")
+    print("Imported datasets")
     return dataset
 
 
 def get_experiment(client):
-    # Expérimentation existante
+    # Existing experiment
     project = client.get_project(project_name="Groupe_1")
     experiment = project.get_experiment(name="experiment-0")
-    print(f"Expérimentation existante récupérée : {experiment.name}")
+    print(f"Existing experimentation recovered : {experiment.name}")
     datasets = experiment.list_attached_dataset_versions()
-    print(f"Datasets attachés à l'expérience : {datasets}")
+    print(f"Datasets attached to the experience : {datasets}")
     '''
         experiment = project.create_experiment(
             name="experiment-1",
@@ -44,45 +45,46 @@ def get_experiment(client):
             name="⭐️ cnam_product_2024",
             dataset_version=dataset,
         )
-        print(f"Création nouvelle expérimentation : {experiment.name}")
+        print(f"Creation of new experiment : {experiment.name}")
         '''
-# Export des annotations au format YOLO
+
+# Export of annotations in YOLO format
 def export_annotations(dataset):
     os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
     zip_path = os.path.join(ANNOTATIONS_DIR, "annotations.zip")
     dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
-    print(f"Annotations exportées dans : {ANNOTATIONS_DIR}")
+    print(f"Annotations exported to : {ANNOTATIONS_DIR}")
 
 def extract_annotations():
-    # Trouver la première archive ZIP dans le dossier ou sous-dossier
+    # Find the first ZIP archive in the folder or subfolder
     zip_file = next(
         (os.path.join(root, file) for root, _, files in os.walk(ANNOTATIONS_DIR)
          for file in files if file.endswith(".zip")),
         None,
     )
     if zip_file:
-        # Créer le dossier "annotations" s'il n'existe pas
+        # Create the "annotations" folder if it does not exist
         os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
 
-        # Décompresser l'archive ZIP
+        # Unzip the ZIP archive
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
             zip_ref.extractall(ANNOTATIONS_DIR)
-        print(f"Archive décompressée dans : {ANNOTATIONS_DIR}")
+        print(f"Archive unzipped in : {ANNOTATIONS_DIR}")
 
-        # Supprimer l'archive ZIP
+        # Delete ZIP archive
         os.remove(zip_file)
-        print(f"Archive {zip_file} supprimée.")
+        print(f"Archive {zip_file} deleted.")
     else:
-        print("Aucune archive ZIP trouvée dans le dossier 'datasets' ou ses sous-dossiers.")
+        print("No ZIP archive found in 'datasets' folder or its subfolders.")
 
-    # Vérifier les fichiers extraits
+    # Check extracted files
     extracted_files = os.listdir(ANNOTATIONS_DIR)
-    print(f"Fichiers extraits : {extracted_files}")
+    print(f"Extracted files: {extracted_files}")
     file_count = len(extracted_files)
-    print(f"Nombre total de fichiers extraits : {file_count}")
+    print(f"Total number of extracted files : {file_count}")
 
 def main():
-    # --- PARTIE 1 : Importer les images et les annotations ---
+    # --- PART 1: Import images and annotations ---
     client = connect_to_client()
     dataset = import_datasets(client)
     get_experiment(client)
