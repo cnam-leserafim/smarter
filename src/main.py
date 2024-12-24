@@ -1,6 +1,9 @@
 import os
 import json
 import zipfile
+import random
+import yaml
+from glob import glob
 from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
@@ -10,6 +13,7 @@ WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
 OUTPUT_DIR_DATASET = "./datasets"
 ANNOTATIONS_DIR = f"{OUTPUT_DIR_DATASET}/annotations"
+SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 
 
 # Connect to the Picsellia client
@@ -83,6 +87,28 @@ def extract_annotations():
     file_count = len(extracted_files)
     print(f"Total number of extracted files : {file_count}")
 
+
+# Split data into train, validation, and test sets
+def split_data():
+    # List of images and labels
+    all_images = glob(f"{OUTPUT_DIR_DATASET}/*.jpg")
+    all_labels = glob(f"{ANNOTATIONS_DIR}/*.txt")
+
+    # Associate images and labels
+    data_pairs = list(zip(all_images, all_labels))
+    random.shuffle(data_pairs)
+
+    # Calculation of indices for each split
+    train_idx = int(len(data_pairs) * SPLIT_RATIOS["train"])
+    val_idx = train_idx + int(len(data_pairs) * SPLIT_RATIOS["val"])
+
+    return {
+        "train": data_pairs[:train_idx],
+        "val": data_pairs[train_idx:val_idx],
+        "test": data_pairs[val_idx:]
+    }
+
+
 def main():
     # --- PART 1: Import images and annotations ---
     client = connect_to_client()
@@ -91,6 +117,8 @@ def main():
     export_annotations(dataset)
     extract_annotations()
 
+    # --- PART 2: Split data for Ultralytics YOLO ---
+    split_data_dict = split_data()
 
 if __name__ == "__main__":
     main()
