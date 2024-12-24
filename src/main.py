@@ -161,14 +161,14 @@ def generate_yaml_file():
 
 
 def main():
-    # --- PART 1: Import images and annotations ---
+    # --- PART 1 : Import images and annotations ---
     client = connect_to_client()
     dataset = import_datasets(client)
     get_experiment(client)
     export_annotations(dataset)
     extract_annotations()
 
-    # --- PART 2: Split data for Ultralytics YOLO ---
+    # --- PART 2 : Split data for Ultralytics YOLO ---
     split_data_dict = split_data()
     # Copying files to corresponding directories
     for split, pairs in split_data_dict.items():
