@@ -8,19 +8,27 @@ import yaml
 from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
+from ultralytics import YOLO
 
 load_dotenv()
 
-
+# PICSELLIA
 WORKSPACE_NAME = "Picsalex-MLOps"
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
-OUTPUT_DIR_DATASET = "./datasets"
-ANNOTATIONS_DIR = f"{OUTPUT_DIR_DATASET}/annotations"
-OUTPUT_DIR = "./datasets/structured"
-IMAGES_DIR = f"{OUTPUT_DIR}/images"
-LABELS_DIR = f"{OUTPUT_DIR}/labels"
+
+# FILE_PATHS
+INPUT_DIR = "./input"
+INPUT_IMAGES_DIR = f"{INPUT_DIR}/images"
+INPUT_ANNOTATIONS_DIR = f"{INPUT_DIR}/annotations"
+DATASET_DIR = "./datasets"
+IMAGES_DIR = "./images"
+LABELS_DIR = "./labels"
+YAML_PATH = f"{DATASET_DIR}/config.yaml"
+
+# MODEL
 SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 random.seed(42)
+YOLO_MODEL = "yolo11n.pt"
 
 
 # Connect to the Picsellia client
@@ -34,8 +42,8 @@ def connect_to_client():
 # Downloading the dataset from Picsellia
 def import_datasets(client):
     dataset = client.get_dataset_version_by_id(DATASET_ID)
-    os.makedirs(OUTPUT_DIR_DATASET, exist_ok=True)
-    dataset.list_assets().download(OUTPUT_DIR_DATASET)
+    os.makedirs(INPUT_IMAGES_DIR, exist_ok=True)
+    dataset.list_assets().download(INPUT_IMAGES_DIR)
     print("Imported datasets")
     return dataset
 
@@ -63,10 +71,11 @@ def get_experiment(client):
 
 # Export of annotations in YOLO format
 def export_annotations(dataset):
-    os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
-    zip_path = os.path.join(ANNOTATIONS_DIR, "annotations.zip")
-    dataset.export_annotation_file(AnnotationFileType.YOLO, zip_path)
-    print(f"Annotations exported to : {ANNOTATIONS_DIR}")
+    os.makedirs(INPUT_ANNOTATIONS_DIR, exist_ok=True)
+    dataset.export_annotation_file(
+        AnnotationFileType.YOLO, INPUT_ANNOTATIONS_DIR
+    )
+    print(f"Annotations exported to : {INPUT_ANNOTATIONS_DIR}")
 
 
 def extract_annotations():
@@ -74,7 +83,7 @@ def extract_annotations():
     zip_file = next(
         (
             os.path.join(root, file)
-            for root, _, files in os.walk(ANNOTATIONS_DIR)
+            for root, _, files in os.walk(INPUT_ANNOTATIONS_DIR)
             for file in files
             if file.endswith(".zip")
         ),
@@ -82,21 +91,22 @@ def extract_annotations():
     )
     if zip_file:
         # Create the "annotations" folder if it does not exist
-        os.makedirs(ANNOTATIONS_DIR, exist_ok=True)
+        os.makedirs(INPUT_ANNOTATIONS_DIR, exist_ok=True)
 
         # Unzip the ZIP archive
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
-            zip_ref.extractall(ANNOTATIONS_DIR)
-        print(f"Archive unzipped in : {ANNOTATIONS_DIR}")
+            zip_ref.extractall(INPUT_ANNOTATIONS_DIR)
+        print(f"Archive unzipped in : {INPUT_ANNOTATIONS_DIR}")
 
+        # TODO : Delete parent folders hash/annotations/
         # Delete ZIP archive
         os.remove(zip_file)
         print(f"Archive {zip_file} deleted.")
     else:
-        print("No ZIP archive found in 'datasets' folder or its subfolders.")
+        print(f"No ZIP archive found in {INPUT_DIR} folder or its subfolders.")
 
     # Check extracted files
-    extracted_files = os.listdir(ANNOTATIONS_DIR)
+    extracted_files = os.listdir(INPUT_ANNOTATIONS_DIR)
     print(f"Extracted files: {extracted_files}")
     print(f"Extracted files: {extracted_files}")
     file_count = len(extracted_files)
@@ -106,8 +116,8 @@ def extract_annotations():
 # Split data into train, validation, and test sets
 def split_data():
     # List of images and labels
-    all_images = glob(f"{OUTPUT_DIR_DATASET}/*.jpg")
-    all_labels = glob(f"{ANNOTATIONS_DIR}/*.txt")
+    all_images = glob(f"{INPUT_IMAGES_DIR}/*.jpg")
+    all_labels = glob(f"{INPUT_ANNOTATIONS_DIR}/*.txt")
 
     # Associate images and labels
     data_pairs = list(zip(all_images, all_labels))
@@ -136,9 +146,9 @@ def copy_files(pairs, dest_image_dir, dest_label_dir):
 # Generating the YAML file
 def generate_yaml_file():
     config = {
-        "train": f"{IMAGES_DIR}/train",
-        "val": f"{IMAGES_DIR}/val",
-        "test": f"{IMAGES_DIR}/test",
+        "train": f"{os.path.abspath('datasets/train/images')}",
+        "val": f"{os.path.abspath('datasets/val/images')}",
+        "test": f"{os.path.abspath('datasets/test/images')}",
         "nc": 10,
         "names": [
             "Canettes",
@@ -153,11 +163,10 @@ def generate_yaml_file():
             "Mikado",
         ],
     }
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    yaml_path = os.path.join(OUTPUT_DIR, "config.yaml")
-    with open(yaml_path, "w") as yaml_file:
+    os.makedirs(DATASET_DIR, exist_ok=True)
+    with open(YAML_PATH, "w") as yaml_file:
         yaml.dump(config, yaml_file)
-    print(f"Generated config.yaml file : {yaml_path}")
+    print(f"Generated config.yaml file : {YAML_PATH}")
 
 
 def main():
@@ -172,8 +181,28 @@ def main():
     split_data_dict = split_data()
     # Copying files to corresponding directories
     for split, pairs in split_data_dict.items():
-        copy_files(pairs, f"{IMAGES_DIR}/{split}", f"{LABELS_DIR}/{split}")
+        copy_files(
+            pairs,
+            f"{DATASET_DIR}/{split}/{IMAGES_DIR}",
+            f"{DATASET_DIR}/{split}/{LABELS_DIR}",
+        )
     generate_yaml_file()
+
+    # Load a pretrained YOLO model (recommended for training)
+    model = YOLO(YOLO_MODEL)
+
+    # Train the model using the dataset
+    results = model.train(
+        data=YAML_PATH, epochs=30, lr0=0.001, batch=16, plots=True
+    )
+
+    # Evaluate the model's performance on the validation set
+    results = model.val()
+
+    # Export the model to ONNX format
+    # success = model.export(format="onnx")
+
+    print(results)
 
 
 if __name__ == "__main__":
