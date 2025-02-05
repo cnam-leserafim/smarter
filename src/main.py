@@ -7,7 +7,7 @@ from glob import glob
 import yaml
 from dotenv import load_dotenv
 from picsellia import Client
-from picsellia.types.enums import AnnotationFileType
+from picsellia.types.enums import AnnotationFileType, LogType
 from ultralytics import YOLO
 
 load_dotenv()
@@ -67,6 +67,7 @@ def get_experiment(client):
         )
         print(f"Creation of new experiment : {experiment.name}")
         """
+    return experiment
 
 
 # Export of annotations in YOLO format
@@ -173,7 +174,7 @@ def main():
     # --- PART 1 : Import images and annotations ---
     client = connect_to_client()
     dataset = import_datasets(client)
-    get_experiment(client)
+    experiment = get_experiment(client)
     export_annotations(dataset)
     extract_annotations()
 
@@ -207,6 +208,9 @@ def main():
 
     # Export the model to ONNX format
     # success = model.export(format="onnx")
+
+    for key, value in results.results_dict.items():
+        experiment.log(f"result_{key}", str(value), LogType.VALUE)
 
     print(results)
 
