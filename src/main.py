@@ -193,7 +193,13 @@ def main():
 
     # Train the model using the dataset
     results = model.train(
-        data=YAML_PATH, epochs=30, lr0=0.001, batch=16, plots=True
+        data=YAML_PATH,
+        epochs=450,
+        lr0=0.0001,
+        batch=14,
+        patience=100,
+        imgsz=640,
+        plots=True,
     )
 
     # Evaluate the model's performance on the validation set
