@@ -139,7 +139,6 @@ def main():
         )
     generate_yaml_file()
 
-    # Load a pretrained YOLO model (recommended for training)
     model = YOLO("best.pt")
 
     # Add callbacks for logs
@@ -152,13 +151,16 @@ def main():
     # results =
     model.train(
         data=YAML_PATH,
-        epochs=2,
+        epochs=10,
         lr0=0.001,
         batch=16,
         patience=10,
         imgsz=640,
         plots=True,
         close_mosaic=0,
+        cls=0.5,
+        iou=0.15,
+        kobj=1.2,
     )
 
     # Evaluate the model's performance on the validation set
@@ -172,7 +174,9 @@ def main():
 
     client.get_experiment().attach_model_version(model_version, True)
 
-    model_version.store("model-latest", model.trainer.best, do_zip=True)
+    model_version.store(
+        "model-latest", model.trainer.best.export(format="onnx"), do_zip=True
+    )
 
     print(results)
 
