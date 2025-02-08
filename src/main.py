@@ -140,7 +140,7 @@ def main():
     generate_yaml_file()
 
     # Load a pretrained YOLO model (recommended for training)
-    model = YOLO("best.pt")
+    model = YOLO(YOLO_MODEL)
 
     # Add callbacks for logs
     logger: PicselliaLogger = PicselliaLogger(client.get_experiment())
@@ -175,6 +175,12 @@ def main():
     model_version.store("model-latest", model.trainer.best, do_zip=True)
 
     print(results)
+
+    resultatsCam = model(0, show=True)
+    print(resultatsCam)
+
+    resultatsImage = model("data/images/test.jpg", show=True)
+    print(resultatsImage)
 
 
 if __name__ == "__main__":
