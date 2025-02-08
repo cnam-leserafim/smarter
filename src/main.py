@@ -101,6 +101,18 @@ def generate_yaml_file():
         "val": f"{os.path.abspath('datasets/val/images')}",
         "test": f"{os.path.abspath('datasets/test/images')}",
         "nc": 10,
+        "names": [
+            "Canettes",
+            "Bouteilles en plastique",
+            "Pepito",
+            "Kinder Country",
+            "Kinder Tronky",
+            "Kinder Pinguy",
+            "Tic-Tac",
+            "Sucette",
+            "Capsule",
+            "Mikado",
+        ],
     }
     os.makedirs(DATASET_DIR, exist_ok=True)
     with open(YAML_PATH, "w") as yaml_file:
@@ -140,10 +152,11 @@ def main():
     # results =
     model.train(
         data=YAML_PATH,
-        epochs=4,
+        epochs=300,
         lr0=0.001,
         batch=16,
         patience=10,
+        imgsz=640,
         plots=True,
         close_mosaic=0,
     )
