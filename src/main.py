@@ -152,7 +152,7 @@ def main():
     # results =
     model.train(
         data=YAML_PATH,
-        epochs=300,
+        epochs=2,
         lr0=0.001,
         batch=16,
         patience=10,
@@ -165,14 +165,14 @@ def main():
     results = model.val()
 
     # Export the model to ONNX format
-    success = model.export(format="onnx")
-
-    client.get_experiment().store(success)
+    # success = model.export(format="onnx")
 
     model_name = "smarter" + time.strftime("-%Y-%m-%d-%H-%M-%S")
     model_version = client.create_model_version(model_name)
 
-    model_version.store("model-latest", "best.onnx", do_zip=True)
+    client.get_experiment().attach_model_version(model_version, True)
+
+    model_version.store("model-latest", model.trainer.best, do_zip=True)
 
     print(results)
 
