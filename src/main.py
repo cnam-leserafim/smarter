@@ -1,20 +1,18 @@
 import os
 import random
 import shutil
+import time
 import zipfile
 from glob import glob
 
 import yaml
 from dotenv import load_dotenv
-from picsellia import Client
-from picsellia.types.enums import AnnotationFileType, LogType
 from ultralytics import YOLO
 
-load_dotenv()
+from PicselliaClient import PicselliaClient
+from PicselliaLogger import PicselliaLogger
 
-# PICSELLIA
-WORKSPACE_NAME = "Picsalex-MLOps"
-DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
+load_dotenv()
 
 # FILE_PATHS
 INPUT_DIR = "./input"
@@ -29,54 +27,6 @@ YAML_PATH = f"{DATASET_DIR}/config.yaml"
 SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 random.seed(42)
 YOLO_MODEL = "yolo11n.pt"
-
-
-# Connect to the Picsellia client
-def connect_to_client():
-    return Client(
-        api_token=os.getenv("PICSELLIA_API_TOKEN"),
-        organization_name=WORKSPACE_NAME,
-    )
-
-
-# Downloading the dataset from Picsellia
-def import_datasets(client):
-    dataset = client.get_dataset_version_by_id(DATASET_ID)
-    os.makedirs(INPUT_IMAGES_DIR, exist_ok=True)
-    dataset.list_assets().download(INPUT_IMAGES_DIR)
-    print("Imported datasets")
-    return dataset
-
-
-def get_experiment(client):
-    # Existing experiment
-    project = client.get_project(project_name="Groupe_1")
-    experiment = project.get_experiment(name="experiment-0")
-    print(f"Existing experimentation recovered : {experiment.name}")
-    datasets = experiment.list_attached_dataset_versions()
-    print(f"Datasets attached to the experience : {datasets}")
-    """
-        experiment = project.create_experiment(
-            name="experiment-1",
-            description="base experiment",
-        )
-
-        experiment.attach_dataset(
-            name="⭐️ cnam_product_2024",
-            dataset_version=dataset,
-        )
-        print(f"Creation of new experiment : {experiment.name}")
-        """
-    return experiment
-
-
-# Export of annotations in YOLO format
-def export_annotations(dataset):
-    os.makedirs(INPUT_ANNOTATIONS_DIR, exist_ok=True)
-    dataset.export_annotation_file(
-        AnnotationFileType.YOLO, INPUT_ANNOTATIONS_DIR
-    )
-    print(f"Annotations exported to : {INPUT_ANNOTATIONS_DIR}")
 
 
 def extract_annotations():
@@ -172,10 +122,10 @@ def generate_yaml_file():
 
 def main():
     # --- PART 1 : Import images and annotations ---
-    client = connect_to_client()
-    dataset = import_datasets(client)
-    experiment = get_experiment(client)
-    export_annotations(dataset)
+    client = PicselliaClient()
+    dataset = client.import_datasets(INPUT_IMAGES_DIR)
+    client.import_experiment()
+    client.export_annotations(dataset, INPUT_ANNOTATIONS_DIR)
     extract_annotations()
 
     # --- PART 2 : Split data for Ultralytics YOLO ---
@@ -190,27 +140,39 @@ def main():
     generate_yaml_file()
 
     # Load a pretrained YOLO model (recommended for training)
-    model = YOLO(YOLO_MODEL)
+    model = YOLO("best.pt")
+
+    # Add callbacks for logs
+    logger: PicselliaLogger = PicselliaLogger(client.get_experiment())
+    model.add_callback("on_train_start", logger.on_train_start)
+    model.add_callback("on_train_epoch_end", logger.on_train_epoch_end)
+    model.add_callback("on_train_end", logger.on_train_end)
 
     # Train the model using the dataset
-    results = model.train(
+    # results =
+    model.train(
         data=YAML_PATH,
-        epochs=450,
-        lr0=0.0001,
-        batch=14,
-        patience=100,
+        epochs=300,
+        lr0=0.001,
+        batch=16,
+        patience=10,
         imgsz=640,
         plots=True,
+        close_mosaic=0,
     )
 
     # Evaluate the model's performance on the validation set
     results = model.val()
 
     # Export the model to ONNX format
-    # success = model.export(format="onnx")
+    success = model.export(format="onnx")
 
-    for key, value in results.results_dict.items():
-        experiment.log(f"result_{key}", str(value), LogType.VALUE)
+    client.get_experiment().store(success)
+
+    model_name = "smarter" + time.strftime("-%Y-%m-%d-%H-%M-%S")
+    model_version = client.create_model_version(model_name)
+
+    model_version.store("model-latest", "best.onnx", do_zip=True)
 
     print(results)
 
