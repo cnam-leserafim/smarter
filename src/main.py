@@ -140,7 +140,7 @@ def main():
     generate_yaml_file()
 
     # Load a pretrained YOLO model (recommended for training)
-    model = YOLO("best.pt")
+    model = YOLO(YOLO_MODEL)
 
     # Add callbacks for logs
     logger: PicselliaLogger = PicselliaLogger(client.get_experiment())
@@ -152,20 +152,23 @@ def main():
     # results =
     model.train(
         data=YAML_PATH,
-        epochs=2,
+        epochs=10,
         lr0=0.001,
         batch=16,
-        patience=10,
+        patience=50,
         imgsz=640,
         plots=True,
         close_mosaic=0,
+        device="cuda"
     )
 
     # Evaluate the model's performance on the validation set
     results = model.val()
 
     # Export the model to ONNX format
-    # success = model.export(format="onnx")
+    path = model.export(format="onnx")
+
+    client.get_experiment().store("best",path)
 
     model_name = "smarter" + time.strftime("-%Y-%m-%d-%H-%M-%S")
     model_version = client.create_model_version(model_name)
@@ -174,7 +177,9 @@ def main():
 
     model_version.store("model-latest", model.trainer.best, do_zip=True)
 
-    print(results)
+    # model_version.store("model-latest", path, do_zip=True)
+    #print(results)
+
 
 
 if __name__ == "__main__":
