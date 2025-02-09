@@ -7,6 +7,7 @@ from glob import glob
 
 import yaml
 from dotenv import load_dotenv
+from sympy import true
 from ultralytics import YOLO
 
 from PicselliaClient import PicselliaClient
@@ -162,6 +163,10 @@ def main():
         plots=True,
         close_mosaic=0,
         optimizer="AdamW",
+        translate=0.1,
+        mixup=true,
+        exist_ok=true,
+        cache=true,
     )
 
     # Evaluate the model's performance on the validation set
