@@ -152,13 +152,16 @@ def main():
     # results =
     model.train(
         data=YAML_PATH,
-        epochs=2,
+        epochs=410,
         lr0=0.001,
+        lrf=0.01,
+        seed=42,
         batch=16,
         patience=10,
         imgsz=640,
         plots=True,
         close_mosaic=0,
+        optimizer="AdamW",
     )
 
     # Evaluate the model's performance on the validation set
@@ -175,12 +178,6 @@ def main():
     model_version.store("model-latest", model.trainer.best, do_zip=True)
 
     print(results)
-
-    resultatsCam = model(0, show=True)
-    print(resultatsCam)
-
-    resultatsImage = model("data/images/test.jpg", show=True)
-    print(resultatsImage)
 
 
 if __name__ == "__main__":
