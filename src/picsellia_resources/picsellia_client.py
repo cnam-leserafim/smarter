@@ -25,7 +25,7 @@ class PicselliaClient:
         except Exception as e:
             print("Unable to fetch dataset : ", e)
 
-    def get_experiment(self, experiment_name, no_create = False) -> Experiment:
+    def get_experiment(self, experiment_name, no_create: bool = False ) -> Experiment:
         try:
             experiment: Experiment = self.__project.get_experiment(
                 name=experiment_name
