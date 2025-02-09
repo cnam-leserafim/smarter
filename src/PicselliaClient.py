@@ -1,7 +1,7 @@
 import os
 
 from picsellia import Client, DatasetVersion, Experiment, Model, ModelVersion
-from picsellia.types.enums import AnnotationFileType, Framework, InferenceType
+from picsellia.types.enums import Framework, InferenceType
 
 # PICSELLIA
 WORKSPACE_NAME = "Picsalex-MLOps"
@@ -20,58 +20,48 @@ MODEL_NAME = "smarter"
 class PicselliaClient:
 
     def __init__(self):
-        self.client = Client(
-            api_token=os.getenv("PICSELLIA_API_TOKEN"),
-            organization_name=WORKSPACE_NAME,
-        )
+        try:
+            self.__client = Client(
+                api_token=os.getenv("PICSELLIA_API_TOKEN"),
+                organization_name=WORKSPACE_NAME,
+            )
+            self.__project = self.__client.get_project(
+                project_name=PROJECT_NAME
+            )
+        except Exception as e:
+            print("Unable to initialize Picsellia client : ", e)
 
     def get_dataset(self) -> DatasetVersion:
-        return self.client.get_dataset_version_by_id(DATASET_ID)
-
-    # Downloading the dataset from Picsellia
-    def import_datasets(self, input_dir: str) -> DatasetVersion:
-        dataset = self.client.get_dataset_version_by_id(DATASET_ID)
-        os.makedirs(input_dir, exist_ok=True)
-        dataset.list_assets().download(input_dir)
-        print("Imported datasets")
-        return dataset
+        try:
+            return self.__client.get_dataset_version_by_id(DATASET_ID)
+        except Exception as e:
+            print("Unable to fetch dataset : ", e)
 
     def get_experiment(self) -> Experiment:
-        project = self.client.get_project(project_name=PROJECT_NAME)
-        return project.get_experiment(name=EXPERIMENT_NAME)
-
-    def import_experiment(self):
-        # Existing experiment
-        project = self.client.get_project(project_name=PROJECT_NAME)
-        experiment = project.get_experiment(name=EXPERIMENT_NAME)
-        print(f"Existing experimentation recovered : {experiment.name}")
-        datasets = experiment.list_attached_dataset_versions()
-        print(f"Datasets attached to the experience : {datasets}")
-        """
-            experiment = project.create_experiment(
-                name="experiment-1",
+        try:
+            experiment: Experiment = self.__project.get_experiment(
+                name=EXPERIMENT_NAME
+            )
+            print(f"Existing experimentation recovered : {experiment.name}")
+        except Exception as e:
+            print("Unable to fetch experiment : ", e)
+            experiment = self.__project.create_experiment(
+                name=EXPERIMENT_NAME,
                 description="base experiment",
             )
 
             experiment.attach_dataset(
                 name="⭐️ cnam_product_2024",
-                dataset_version=dataset,
+                dataset_version=self.get_dataset(),
             )
             print(f"Creation of new experiment : {experiment.name}")
-            """
-
-    # Export of annotations in YOLO format
-    @staticmethod
-    def export_annotations(dataset: DatasetVersion, input_dir: str):
-        os.makedirs(input_dir, exist_ok=True)
-        dataset.export_annotation_file(AnnotationFileType.YOLO, input_dir)
-        print(f"Annotations exported to : {input_dir}")
+        return experiment
 
     def get_model(self) -> Model:
-        return self.client.get_model(MODEL_NAME)
+        return self.__client.get_model(MODEL_NAME)
 
     def create_model_version(self, name: str) -> ModelVersion:
-        model = self.get_model()
+        model: Model = self.get_model()
         labelmap: dict = {
             str(index): label.name
             for index, label in enumerate(self.get_dataset().list_labels())
@@ -82,3 +72,8 @@ class PicselliaClient:
             type=InferenceType.OBJECT_DETECTION,
             framework=Framework.ONNX,
         )
+
+    def get_best_version(self) -> ModelVersion:
+        model: Model = self.get_model()
+        versions_list = model.list_versions(order_by=["-version"])
+        return versions_list[0]

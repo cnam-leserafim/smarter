@@ -12,10 +12,6 @@ class PicselliaLogger:
         self.experiment.log("Model", str(trainer.model), LogType.LINE)
 
     def on_train_epoch_end(self, trainer: DetectionTrainer):
-        # Here we log each value of the metrics object after each epoch
-        # and it normally adds the value to the Log which is of type LINE
-        # it should build a graph with the values of the metrics in real time
-        # according to documentation
         for name, value in trainer.metrics.items():
             self.experiment.log(name, [value], LogType.LINE)
         self.experiment.log(
@@ -32,4 +28,4 @@ class PicselliaLogger:
             )
 
     def on_train_end(self, trainer: DetectionTrainer):
-        print(trainer.metrics)
+        self.experiment.log("Model", str(trainer.model), LogType.LINE)
