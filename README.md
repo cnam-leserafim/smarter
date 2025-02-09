@@ -22,7 +22,7 @@ Le projet **SMART** (Smart Merchandise Automated Recognition Technology) a pour 
 ```
 pip install -r requirements.txt
 ```
-- Exécutez le projet directement via PyCharm ou avec la commande 
+- Exécuter le projet directement via PyCharm ou avec la commande 
 ```
 python main.py
 ```
