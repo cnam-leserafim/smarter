@@ -137,6 +137,7 @@ def main():
         hsv_s=parameters["hsv_s"],
         hsv_v=parameters["hsv_v"],
         optimizer=parameters["optimizer"],
+        device=config.DEVICE
     )
 
     # Evaluate the model's performance on the validation set
