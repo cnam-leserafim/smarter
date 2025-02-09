@@ -3,7 +3,7 @@ Ce projet permet d'entraîner un modèle YOLO et d'exécuter des inférences en 
 
 ## 🎯 Objectif du projet
 
-Le projet SMART (Smart Merchandise Automated Recognition Technology) a pour but de développer une solution en Python capable d'utiliser la vision par ordinateur pour reconnaître automatiquement un ensemble défini de produits.
+Le projet **SMART** (Smart Merchandise Automated Recognition Technology) a pour but de développer une solution en Python capable d'utiliser la vision par ordinateur pour reconnaître automatiquement un ensemble défini de produits.
 
 ## 👑 Membres de l'équipe
 
@@ -15,11 +15,17 @@ Le projet SMART (Smart Merchandise Automated Recognition Technology) a pour but 
 ## 🔧 Installation
 - Installer **PyCharm**
 - Installer **Python 3.11** via Windows Store
-- Cloner le projet depuis GitHub
-- Ouvrir le projet via PyCharm
+- Cloner le projet depuis **GitHub**
+- Ouvrir le projet via **PyCharm**
 - Configurer and activer l'environnement virtuel
-- Installer les dépendances requises ```pip install -r requirements.txt```
-- Exécutez le projet directement via PyCharm ou avec la commande : ```python main.py```
+- Installer les dépendances requises
+```
+pip install -r requirements.txt
+```
+- Exécutez le projet directement via PyCharm ou avec la commande 
+```
+python main.py
+```
 
 ## 🚀 Prerequisites
 - Télécharger PyCharm
