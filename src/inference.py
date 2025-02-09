@@ -16,6 +16,7 @@ load_dotenv()
 MODEL_NAME="model-latest"
 MODEL_DIR_PATH = "./model"
 DEVICE="cuda"
+EXPERIMENT_NAME="experiment-0"
 
 class InferenceMode(Enum):
     WEBCAM = 0
@@ -25,8 +26,8 @@ class InferenceMode(Enum):
 
 def get_model():
     client = PicselliaClient()
-    latest_version = client.get_latest_version()
-    model_file = latest_version.get_file(MODEL_NAME)
+    experiment = client.get_experiment(EXPERIMENT_NAME, no_create=True)
+    model_file = experiment.get_base_model_version().get_file(MODEL_NAME)
     model_file.download(MODEL_DIR_PATH)
     model_filename = os.path.join(MODEL_DIR_PATH, model_file.filename)
     with zipfile.ZipFile(model_filename, "r") as zip_ref:
@@ -72,7 +73,22 @@ if __name__ == "__main__":
         type=str,
         help="Chemin du fichier (requis pour image et vidéo)",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        help="Device utilisé pour l'inférence (défaut: cuda)",
+    )
+    parser.add_argument(
+        "--experiment",
+        type=str,
+        default="experiment-0",
+        help="Nom de l'expérience (défaut: experiment-0)",
+    )
     args = parser.parse_args()
+
+    DEVICE=args.device
+    EXPERIMENT_NAME=args.experiment
 
     if args.mode == "WEBCAM":
         start_inference(InferenceMode.WEBCAM)
