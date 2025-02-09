@@ -5,7 +5,9 @@ from picsellia.types.enums import Framework, InferenceType
 
 # PICSELLIA
 WORKSPACE_NAME = "Picsalex-MLOps"
+
 DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
+DATASET_NAME = "⭐️ cnam_product_2024"
 
 PROJECT_ID = "0193641e-53c8-7928-887c-4be047938648"
 PROJECT_NAME = "Groupe_1"
@@ -51,7 +53,7 @@ class PicselliaClient:
             )
 
             experiment.attach_dataset(
-                name="⭐️ cnam_product_2024",
+                name=DATASET_NAME,
                 dataset_version=self.get_dataset(),
             )
             print(f"Creation of new experiment : {experiment.name}")
