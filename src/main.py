@@ -16,6 +16,8 @@ from src.utils import (
     get_split_data,
 )
 
+import src.config as config
+
 load_dotenv()
 
 # FILE_PATHS
@@ -30,7 +32,6 @@ YAML_PATH = f"{DATASET_DIR}/config.yaml"
 # MODEL
 SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 random.seed(42)
-YOLO_MODEL = "yolo11n.pt"
 
 
 # HYPER PARAMETERS
@@ -107,7 +108,7 @@ def main():
     generate_yaml_file()
 
     # Load a pretrained YOLO model (recommended for training)
-    model = YOLO(YOLO_MODEL)
+    model = YOLO(config.YOLO_MODEL)
 
     # Add callbacks for logs
     logger: PicselliaLogger = PicselliaLogger(client.get_experiment())
