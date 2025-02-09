@@ -6,8 +6,8 @@ import yaml
 from dotenv import load_dotenv
 from ultralytics import YOLO
 
-from PicselliaClient import PicselliaClient
-from PicselliaLogger import PicselliaLogger
+from src.picsellia_resources.picsellia_client import PicselliaClient
+from src.picsellia_resources.picsellia_logger import PicselliaLogger
 from src.utils import (
     copy_files,
     download_dataset,
@@ -35,21 +35,22 @@ YOLO_MODEL = "yolo11n.pt"
 
 # HYPER PARAMETERS
 parameters = {
-    "epochs": 100,
-    "lr0": 0.0105,
-    "lrf": 0.00961,
+    "epochs": 150,
+    "seed": 42,
+    "lr0": 0.001,
+    "lrf": 0.003,
     "momentum": 0.96,
     "weight_decay": 0.00048,
-    "batch": 8,
-    "patience": 10,
+    "batch": 16,
+    "patience": 30,
     "imgsz": 640,
     "plots": True,
     "close_mosaic": 0,
-    "box": 8.99672,
+    "box": 8.0,
     "cls": 0.41684,
-    "dfl": 1.42676,
+    "dfl": 1.2,
     "hsv_h": 0.01469,
-    "hsv_s": 0.7,
+    "hsv_s": 0.6,
     "hsv_v": 0.44641,
     "optimizer": "AdamW",
 }
@@ -118,6 +119,7 @@ def main():
     model.train(
         data=YAML_PATH,
         epochs=parameters["epochs"],
+        seed=parameters["seed"],
         lr0=parameters["lr0"],
         lrf=parameters["lrf"],
         momentum=parameters["momentum"],
@@ -137,7 +139,7 @@ def main():
     )
 
     # Evaluate the model's performance on the validation set
-    # results = model.val()
+    model.val()
     # print(results)
 
     # Store new model version
@@ -150,12 +152,6 @@ def main():
     experiment.attach_model_version(model_version, True)
 
     print("Experiment saved")
-
-    resultats_cam = model(0, show=True)
-    print(resultats_cam)
-
-    resultats_image = model("./data/test.jpg", show=True)
-    print(resultats_image)
 
 
 if __name__ == "__main__":

@@ -75,7 +75,7 @@ class PicselliaClient:
             framework=Framework.ONNX,
         )
 
-    def get_best_version(self) -> ModelVersion:
+    def get_latest_version(self) -> ModelVersion:
         model: Model = self.get_model()
         versions_list = model.list_versions(order_by=["-version"])
         return versions_list[0]
