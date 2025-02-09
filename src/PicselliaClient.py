@@ -1,6 +1,6 @@
 import os
 
-from picsellia import Client, DatasetVersion, Experiment, ModelVersion
+from picsellia import Client, DatasetVersion, Experiment, Model, ModelVersion
 from picsellia.types.enums import AnnotationFileType, Framework, InferenceType
 
 # PICSELLIA
@@ -37,6 +37,9 @@ class PicselliaClient:
     def get_experiment(self) -> Experiment:
         project = self.client.get_project(project_name=PROJECT_ID)
         return project.get_experiment(name=EXPERIMENT_ID)
+
+    def get_model(self) -> Model:
+        return self.client.get_model(MODEL_NAME)
 
     def import_experiment(self):
         # Existing experiment
