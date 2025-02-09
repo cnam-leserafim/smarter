@@ -14,7 +14,7 @@ EXPERIMENT_ID = "01938deb-1008-755a-86b5-a24d3f9f6318"
 EXPERIMENT_NAME = "experiment-0"
 
 MODEL_ID = "019493d3-d97b-71a9-9051-3d558aedf5f4"
-MODEL_NAME = "smarter"
+MODEL_NAME = "Groupe_1"
 
 
 class PicselliaClient:
