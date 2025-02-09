@@ -9,7 +9,7 @@ DATASET_ID = "0193688e-aa8f-7cbe-9396-bec740a262d0"
 
 PROJECT_ID = "Groupe_1"
 
-EXPERIMENT_ID = "experiment-2"
+EXPERIMENT_ID = "experiment-8"
 
 MODEL_ID = "019493d3-d97b-71a9-9051-3d558aedf5f4"
 MODEL_NAME = "smarter"
@@ -44,22 +44,22 @@ class PicselliaClient:
     def import_experiment(self):
         # Existing experiment
         project = self.client.get_project(project_name=PROJECT_ID)
-        experiment = project.get_experiment(name=EXPERIMENT_ID)
-        print(f"Existing experimentation recovered : {experiment.name}")
-        datasets = experiment.list_attached_dataset_versions()
-        print(f"Datasets attached to the experience : {datasets}")
-        """
+        try:
+            experiment = project.get_experiment(name=EXPERIMENT_ID)
+            print(f"Existing experimentation recovered : {experiment.name}")
+            datasets = experiment.list_attached_dataset_versions()
+            print(f"Datasets attached to the experience : {datasets}")
+        except Exception as e:
             experiment = project.create_experiment(
-                name="experiment-1",
+                name=EXPERIMENT_ID,
                 description="base experiment",
             )
 
             experiment.attach_dataset(
                 name="⭐️ cnam_product_2024",
-                dataset_version=dataset,
+                dataset_version=self.get_dataset(),
             )
             print(f"Creation of new experiment : {experiment.name}")
-            """
 
     # Export of annotations in YOLO format
     @staticmethod
