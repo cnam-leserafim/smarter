@@ -13,14 +13,14 @@ SPLIT_RATIOS = {"train": 0.6, "val": 0.2, "test": 0.2}
 # Downloading the dataset from Picsellia
 def download_dataset(dest_dir: str, dataset: DatasetVersion) -> None:
     os.makedirs(dest_dir, exist_ok=True)
-    dataset.list_assets().download(dest_dir)
+    dataset.list_assets().download(dest_dir, use_id=True)
     print("Imported dataset")
 
 
 # Export of annotations in YOLO format
 def export_annotations(dataset: DatasetVersion, dest_dir: str) -> None:
     os.makedirs(dest_dir, exist_ok=True)
-    dataset.export_annotation_file(AnnotationFileType.YOLO, dest_dir)
+    dataset.export_annotation_file(AnnotationFileType.YOLO, dest_dir, use_id=True)
     print(f"Annotations exported to : {dest_dir}")
 
 
@@ -62,8 +62,8 @@ def extract_annotations(dest_dir: str) -> None:
 # Split data into train, validation, and test sets
 def get_split_data(images_dir: str, annotations_dir: str) -> dict:
     # List of images and labels
-    all_images = glob(f"{images_dir}/*.jpg")
-    all_labels = glob(f"{annotations_dir}/*.txt")
+    all_images = glob(f"{images_dir}/*")
+    all_labels = glob(f"{annotations_dir}/*")
 
     # Associate images and labels
     data_pairs = list(zip(all_images, all_labels))

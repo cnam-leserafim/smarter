@@ -12,5 +12,5 @@ EXPERIMENT_NAME = "experiment-0"
 ##
 
 YOLO_MODEL = "yolo11n.pt"
-
+DEVICE="cuda"
 

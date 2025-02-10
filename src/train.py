@@ -93,7 +93,7 @@ def main():
     export_annotations(dataset, INPUT_ANNOTATIONS_DIR)
     extract_annotations(INPUT_ANNOTATIONS_DIR)
 
-    experiment = client.get_experiment()
+    experiment = client.get_experiment(config.EXPERIMENT_NAME)
 
     # --- PART 2 : Split data for Ultralytics YOLO ---
     split_data_dict = get_split_data(INPUT_IMAGES_DIR, INPUT_ANNOTATIONS_DIR)
@@ -111,7 +111,7 @@ def main():
     model = YOLO(config.YOLO_MODEL)
 
     # Add callbacks for logs
-    logger: PicselliaLogger = PicselliaLogger(client.get_experiment())
+    logger: PicselliaLogger = PicselliaLogger(client.get_experiment(config.EXPERIMENT_NAME))
     model.add_callback("on_train_start", logger.on_train_start)
     model.add_callback("on_train_epoch_end", logger.on_train_epoch_end)
     model.add_callback("on_train_end", logger.on_train_end)
@@ -137,6 +137,7 @@ def main():
         hsv_s=parameters["hsv_s"],
         hsv_v=parameters["hsv_v"],
         optimizer=parameters["optimizer"],
+        device=config.DEVICE
     )
 
     # Evaluate the model's performance on the validation set

@@ -25,16 +25,18 @@ class PicselliaClient:
         except Exception as e:
             print("Unable to fetch dataset : ", e)
 
-    def get_experiment(self) -> Experiment:
+    def get_experiment(self, experiment_name, no_create: bool = False ) -> Experiment:
         try:
             experiment: Experiment = self.__project.get_experiment(
-                name=config.EXPERIMENT_NAME
+                name=experiment_name
             )
             print(f"Existing experimentation recovered : {experiment.name}")
         except Exception as e:
+            if no_create:
+                raise e
             print("Unable to fetch experiment : ", e)
             experiment = self.__project.create_experiment(
-                name=config.EXPERIMENT_NAME,
+                name=experiment_name,
                 description="base experiment",
             )
 

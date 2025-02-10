@@ -1,5 +1,7 @@
 import argparse
 import os
+import glob
+import shutil
 from enum import Enum
 
 from dotenv import load_dotenv
@@ -7,8 +9,14 @@ from ultralytics import YOLO
 
 from picsellia_resources.picsellia_client import PicselliaClient
 
+import zipfile
+
 load_dotenv()
 
+MODEL_NAME="model-latest"
+MODEL_DIR_PATH = "./model"
+DEVICE="cuda"
+EXPERIMENT_NAME="experiment-0"
 
 class InferenceMode(Enum):
     WEBCAM = 0
@@ -18,24 +26,36 @@ class InferenceMode(Enum):
 
 def get_model():
     client = PicselliaClient()
-    latest_version = client.get_latest_version()
-    file = latest_version.get_file("best")
-    file.download()
-    return YOLO("best.pt")
+    experiment = client.get_experiment(EXPERIMENT_NAME, no_create=True)
+    model_file = experiment.get_base_model_version().get_file(MODEL_NAME)
+    model_file.download(MODEL_DIR_PATH)
+    model_filename = os.path.join(MODEL_DIR_PATH, model_file.filename)
+    with zipfile.ZipFile(model_filename, "r") as zip_ref:
+        zip_ref.extractall(MODEL_DIR_PATH)
+    pt_files = glob.glob(f"{MODEL_DIR_PATH}/**/*.pt", recursive=True)
+    yolo_model = YOLO(pt_files[0])
+    # delete all dirs and files in MODEL_DIR_PATH
+    for item in os.listdir(MODEL_DIR_PATH):
+        if os.path.isfile(os.path.join(MODEL_DIR_PATH, item)):
+            os.remove(os.path.join(MODEL_DIR_PATH, item))
+        else:
+            shutil.rmtree(os.path.join(MODEL_DIR_PATH, item))
+    return yolo_model
 
 
 def start_inference(mode: InferenceMode, source_path: str = None) -> None:
     inference_model = get_model()
 
     if mode == InferenceMode.WEBCAM:
-        inference_model(0, device="cuda", show=True)
+        inference_model(0, device=DEVICE, show=True)
     elif mode in [InferenceMode.IMAGE, InferenceMode.VIDEO]:
         if not os.path.exists(source_path):
             print(f"Erreur: Le fichier {source_path} n'existe pas.")
             return
-        result = inference_model(source_path, device="cuda", show=True)
+        results = inference_model(source_path, device=DEVICE, show=True)
         if mode == InferenceMode.IMAGE:
-            result[0].show()
+            for result in results:
+                result.show()
 
 
 if __name__ == "__main__":
@@ -53,7 +73,22 @@ if __name__ == "__main__":
         type=str,
         help="Chemin du fichier (requis pour image et vidéo)",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        help="Device utilisé pour l'inférence (défaut: cuda)",
+    )
+    parser.add_argument(
+        "--experiment",
+        type=str,
+        default="experiment-0",
+        help="Nom de l'expérience (défaut: experiment-0)",
+    )
     args = parser.parse_args()
+
+    DEVICE=args.device
+    EXPERIMENT_NAME=args.experiment
 
     if args.mode == "WEBCAM":
         start_inference(InferenceMode.WEBCAM)
